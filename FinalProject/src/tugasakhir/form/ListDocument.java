@@ -13,6 +13,7 @@ package tugasakhir.form;
 import tugasakhir.process.DocumentDisplayer;
 import java.awt.ComponentOrientation;
 import java.io.IOException;
+import java.util.List;
 import org.apache.lucene.queryParser.ParseException;
 import tugasakhir.process.ExportToExcel;
 
@@ -167,28 +168,29 @@ public class ListDocument extends javax.swing.JFrame{
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
 
-                String halaman = (String) this.jTable1.getValueAt(this.jTable1.getSelectedRow(), this.jTable1.getSelectedColumn());
+        
+        String halaman = (String) this.jTable1.getValueAt(this.jTable1.getSelectedRow(), this.jTable1.getSelectedColumn());
         
         String nass = this.docDisplayer.getNass(this.IDKITAB, halaman);
         
         this.nassTextArea.setText(nass);
         
         String[] terms = this.docDisplayer.getDocumentTerms(this.IDKITAB, halaman);
-        int k = terms.length/5;
+        List<String> termCorpus = this.docDisplayer.getCorpusTerms();
+        int k = termCorpus.size()/5;
         String[][] termList = new String[k][5];
         
-        for (int i = 0; i < terms.length; i++) {
+        for (int i = 0; i < termCorpus.size(); i++) {
             
             for (int j = 0; j < k; j++) {
                 
                 for (int l = 0; l < 5; l++) {
-                    if(i<terms.length)
-                    termList[j][l] = terms[i];
+                    if(i<termCorpus.size())
+                    termList[j][l] = termCorpus.get(i);
                     i++;
                 }
             }
         }
-        
         this.termTableModel.populateList(termList);
         ExportToExcel.expToCSV(this.termTableModel, "D://arabicdocs/data3.xls");
         

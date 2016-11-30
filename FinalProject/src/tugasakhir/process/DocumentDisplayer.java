@@ -6,8 +6,10 @@ package tugasakhir.process;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import org.apache.lucene.analysis.ar.ArabicAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
@@ -170,7 +172,23 @@ String[][] judul = {
        
         return nass;
     }
-    
+    public List<String> getCorpusTerms(){
+        TermEnum terms = null;
+        List<String> uniqueTerms = new ArrayList<>();
+        try{
+            terms = ir.terms();
+            while (terms.next()) {
+                final Term term = terms.term();
+                if (term.field().equals("nass")) {
+                        uniqueTerms.add(term.text());
+                }
+            }
+        }
+        catch(Exception ex){
+            
+        }
+        return uniqueTerms;
+    }
     public String[] getDocumentTerms(String idKitab, String halKitab){
         
         IndexSearcher indexSearcher = new IndexSearcher(this.ir);
