@@ -28,6 +28,7 @@ import javax.swing.JFrame;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
+import tugasakhir.process.IdxReader;
 import tugasakhir.process.Indexing;
 
 /**
@@ -566,10 +567,10 @@ public class View extends FrameView {
         setMenuBar(menuBar);
         setStatusBar(statusPanel);
     }// </editor-fold>//GEN-END:initComponents
-
+    IdxReader indexReader ;
     private void cariButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cariButton1ActionPerformed
        
-                String index = "FileIndex";
+        String index = "FileIndex";
         Searcher searcher = null;
         try {
             searcher = new Searcher(index);
@@ -581,9 +582,13 @@ public class View extends FrameView {
         
         try {
             hasil = searcher.search(this.cariTextField1.getText());
-
-
-        } catch (ParseException | IOException ex) {
+            //
+            //!!!
+            indexReader = new IdxReader(index);
+            String searchText = this.cariTextField1.getText().replaceAll("\"", "");
+            indexReader.getTermPos(searchText);
+            //indexReader.getTerms();
+        } catch (IOException | ParseException ex) {
         }
         this.hasilCariTableModel.populateList(hasil);
         
@@ -637,7 +642,6 @@ public class View extends FrameView {
                 offset = searchWord.indexOf(searchWord, offset+1);
             }
             catch(BadLocationException ble) { System.out.println(ble); }
-            
         }
         
     }//GEN-LAST:event_hasilTable1MouseClicked
@@ -712,7 +716,6 @@ public class View extends FrameView {
     private HasilTableModel hasilCariTableModel;
     private DatabaseIndexer indexer;
     
-
     private JDialog aboutBox;
     private JDialog guide;
     private JFrame documentList;

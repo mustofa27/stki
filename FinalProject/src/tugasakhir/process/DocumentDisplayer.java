@@ -6,10 +6,8 @@ package tugasakhir.process;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import org.apache.lucene.analysis.ar.ArabicAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
@@ -37,6 +35,7 @@ import org.apache.lucene.util.Version;
 public class DocumentDisplayer {
 
     IndexReader ir;
+    TermFreqVector vector = null;
     
     public DocumentDisplayer(String indexPath) throws IOException {
         Directory indexDirectory = FSDirectory.open(new File(indexPath));
@@ -45,20 +44,19 @@ public class DocumentDisplayer {
     
     public String[][] getDocumentList() throws CorruptIndexException, IOException{
         int maxDoc = this.ir.numDocs();
-        String[][] docList = new String[maxDoc][3];
+        String[][] docList = new String[maxDoc][2];
         
         for (int i = 0; i < maxDoc; i++) {            
                 Document doc = this.ir.document(i);
                 docList[i][0] = doc.get("idkitab");
                 docList[i][1] = doc.get("halkitab");
-                //docList[i][1] = doc.get("nass");
-                docList[i][2] = doc.get("nass"); 
+                docList[i][1] = doc.get("nass");
         }        
         return docList;
     }
     
     public String[][] getKitabList() throws IOException{
-        String[][] idKitab = new String[21][2];  //cek kitab_id list below
+        String[][] idKitab = new String[21][2];
         int i = 0;
         HashMap<Integer,String> judulKitab = this.getJudul();
         try (TermEnum terms = this.ir.terms(new Term("idKitab"))) {
@@ -71,16 +69,10 @@ public class DocumentDisplayer {
                     break;
             }
         }
-            
-//        Arrays.sort
-        
-        
-        
-
         return idKitab;
     }
     
-        public HashMap<Integer,String> getJudul(){
+   public HashMap<Integer,String> getJudul(){
     
 String[][] judul = {
     {"1","نهاية المطلب في دراية المذهب"},
@@ -108,13 +100,9 @@ String[][] judul = {
 };
      
         HashMap<Integer,String> judulMap = new HashMap<>();
-        
         for (int i = 0; i < judul.length; i++) {
-
             judulMap.put(Integer.parseInt(judul[i][0]), judul[i][1]);
-            
         }
-        
         return judulMap;
     } 
     
@@ -133,7 +121,6 @@ String[][] judul = {
             int docId = topDocs[i].doc;
             Document document = this.ir.document(docId);
             idHalaman[i] = Integer.parseInt(document.get("halKitab"));
-            
         }
         Arrays.sort(idHalaman);
         return idHalaman;
@@ -141,7 +128,6 @@ String[][] judul = {
     
     public String getNass(String idKitab,String halKitab){
         String nass = null;
-        
         IndexSearcher indexSearcher = new IndexSearcher(this.ir);
         
         Query idKitabQuery = new TermQuery(new Term("idKitab", idKitab));
@@ -149,8 +135,6 @@ String[][] judul = {
         BooleanQuery booleanQuery = new BooleanQuery();
         booleanQuery.add(idKitabQuery, Occur.MUST);
         booleanQuery.add(halKitabQuery, Occur.MUST);
-        
-        
         
         TopScoreDocCollector collector = TopScoreDocCollector.create(1, true);
         try {
@@ -166,29 +150,10 @@ String[][] judul = {
         } catch (CorruptIndexException ex) {
         } catch (IOException ex) {
         }
-        
         nass = document.get("nass");
-            
-       
         return nass;
     }
-    public List<String> getCorpusTerms(){
-        TermEnum terms = null;
-        List<String> uniqueTerms = new ArrayList<>();
-        try{
-            terms = ir.terms();
-            while (terms.next()) {
-                final Term term = terms.term();
-                if (term.field().equals("nass")) {
-                        uniqueTerms.add(term.text());
-                }
-            }
-        }
-        catch(Exception ex){
-            
-        }
-        return uniqueTerms;
-    }
+    
     public String[] getDocumentTerms(String idKitab, String halKitab){
         
         IndexSearcher indexSearcher = new IndexSearcher(this.ir);
@@ -209,10 +174,13 @@ String[][] judul = {
         int docId = topDocs[0].doc;
         
         String[] terms = null;
-        TermFreqVector vector = null;
+        //TermFreqVector vector = null;
         
         try {
             vector = this.ir.getTermFreqVector(docId, "nass");
+            //-----------------------------
+            int docfreq = this.ir.docFreq(new Term("myterm","يلزم"));
+            
         } catch (IOException ex) {
         }
         

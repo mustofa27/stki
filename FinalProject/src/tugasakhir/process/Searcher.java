@@ -58,15 +58,16 @@ public class Searcher {
         
         IndexSearcher indexSearcher = new IndexSearcher(this.indexReader);
         
-        int hits = 20;
+        int hits = 100;
         TopScoreDocCollector collector = TopScoreDocCollector.create(hits, true);
-//      custom similarity  
-        indexSearcher.setSimilarity(new CustomSimilarity());
+        
+        //!!!
+        //indexSearcher.setSimilarity(new CustomSimilarity());
         indexSearcher.search(query, collector);
 //        this.top = collector.topDocs();
 
         ScoreDoc[] topDocs = collector.topDocs().scoreDocs;
-//        indexSearcher.setSimilarity(new CustomSimilarity());
+        indexSearcher.setSimilarity(new CustomSimilarity());
         
         String[][] hasil = new String[topDocs.length][5];
         
@@ -78,10 +79,8 @@ public class Searcher {
             hasil[i][1] = document.get("idKitab");
             hasil[i][2] = document.get("halKitab");
             hasil[i][3] = document.get("nass");
-            hasil[i][4] = String.valueOf(topDocs[i].score);
-            
+            hasil[i][4] = String.valueOf(topDocs[i].score);            
         }
-        
         return hasil;
         
     }
@@ -89,8 +88,6 @@ public class Searcher {
     public void getHighlight() throws IOException, InvalidTokenOffsetsException{
         
         ScoreDoc[] topDocs = this.top.scoreDocs;
-        
-        
         String[][] hasil = new String[topDocs.length][5];
         
         for (int i = 0; i < topDocs.length; i++) {
@@ -106,8 +103,6 @@ public class Searcher {
             String result = highlighter.getBestFragments(tokenStream, text, 10, "..");
             System.out.println("\t" + result);
         }
-        
-        
     }
     
 }

@@ -13,21 +13,27 @@ package tugasakhir.form;
 import tugasakhir.process.DocumentDisplayer;
 import java.awt.ComponentOrientation;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.lucene.queryParser.ParseException;
 import tugasakhir.process.ExportToExcel;
+import tugasakhir.process.MyDoc;
 
 /**
  *
  * @author Indra
  */
 public class ListDocument extends javax.swing.JFrame{
-
+   
     /** Creates new form Preprocess */
     public ListDocument(java.awt.Frame parent) {
 //        super(parent.getGraphicsConfiguration());
+        
         try {
             initialize();
+            //generateDBSheet();
         } catch (IOException | ParseException ex) {
         }
         
@@ -168,32 +174,29 @@ public class ListDocument extends javax.swing.JFrame{
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
 
-        
-        String halaman = (String) this.jTable1.getValueAt(this.jTable1.getSelectedRow(), this.jTable1.getSelectedColumn());
+                String halaman = (String) this.jTable1.getValueAt(this.jTable1.getSelectedRow(), this.jTable1.getSelectedColumn());
         
         String nass = this.docDisplayer.getNass(this.IDKITAB, halaman);
         
         this.nassTextArea.setText(nass);
         
         String[] terms = this.docDisplayer.getDocumentTerms(this.IDKITAB, halaman);
-        List<String> termCorpus = this.docDisplayer.getCorpusTerms();
-        int k = termCorpus.size()/5;
+        int k = terms.length/5;
         String[][] termList = new String[k][5];
         
-        for (int i = 0; i < termCorpus.size(); i++) {
+        for (int i = 0; i < terms.length; i++) {
             
             for (int j = 0; j < k; j++) {
                 
                 for (int l = 0; l < 5; l++) {
-                    if(i<termCorpus.size())
-                    termList[j][l] = termCorpus.get(i);
+                    if(i<terms.length)
+                    termList[j][l] = terms[i];
                     i++;
                 }
             }
         }
-        this.termTableModel.populateList(termList);
-        ExportToExcel.expToCSV(this.termTableModel, "D://arabicdocs/data3.xls");
         
+        this.termTableModel.populateList(termList);
         
     }//GEN-LAST:event_jTable1MouseClicked
 
@@ -210,13 +213,13 @@ public class ListDocument extends javax.swing.JFrame{
     private javax.swing.JScrollPane nassScrollPane;
     private javax.swing.JTextArea nassTextArea;
     // End of variables declaration//GEN-END:variables
-
+    private DocPageTableModel docTableModel;
     private KitabIdentityTableModel idKitabTableModel;
     private DocIdentityTableModel halKitabTableModel;
     private TermListTableModel termTableModel;
     private DocumentDisplayer docDisplayer;
     private String IDKITAB = "1";
-    
+    String[][] idKitab = null;
     
     private void initialize() throws IOException, ParseException{
         try {
@@ -225,30 +228,80 @@ public class ListDocument extends javax.swing.JFrame{
         }
         
         this.termTableModel = new TermListTableModel();
-        
+        //'
         String[] idKitabColumnNames = {"ID","Judul"};
         this.idKitabTableModel = new KitabIdentityTableModel();
         this.idKitabTableModel.setColumnName(idKitabColumnNames);
         
-        String[][] idKitab = this.docDisplayer.getKitabList();
+        idKitab = this.docDisplayer.getKitabList();
                 
         this.idKitabTableModel.populateList(idKitab);
         //export to excel workbook
-        ExportToExcel.expToCSV(this.idKitabTableModel, "D://arabicdocs/data1.xls");
-        
+        ExportToExcel.expToCSV(this.idKitabTableModel, "D://arabicdocs/kitabheader.xls");
+        //!
         String[] halKitabColumnNames = {"Hal"};
         this.halKitabTableModel = new DocIdentityTableModel();
         this.halKitabTableModel.setColumnName(halKitabColumnNames);
         
         int[] halKitab = this.docDisplayer.getHalamanList("1");
+        
         String[][] halKitabList = new String[halKitab.length][1];
         for (int i = 0; i < halKitabList.length; i++) {
             halKitabList[i][0] = String.valueOf(halKitab[i]);
         }
         this.halKitabTableModel.populateList(halKitabList);
-  
+        
+        //generateDBSheet();
+    }
+    
+    private void generateDBSheet() throws IOException, ParseException{
+        int dblen = idKitab.length;
+        int pageLen=0;           
+        int[] pagelist = null;
+        String kitabNo = "";
+        String[] termlist=null;
+        Map docMap = new HashMap();
+        MyDoc m = null;
+        List<String[]> doctermlist= new ArrayList<>();
+        String[][] dbterms = null;
+        String[] strArr ;
+        
+        int counter = 0;
+        for (int i=0; i<dblen; i++){
+            kitabNo = idKitab[i][0];
+            pagelist = this.docDisplayer.getHalamanList(kitabNo);
+            pageLen = pagelist.length;
+            
+            termlist = new String[pageLen];
+            for (int j=0; j<pageLen; j++){
+               termlist = this.docDisplayer.getDocumentTerms(kitabNo, String.valueOf(pagelist[j]));               
+               m = new MyDoc(idKitab[i][1],pagelist,termlist); 
+            }
+            docMap.put(String.valueOf(kitabNo), m);
+            
+            for(int docno: pagelist)
+              for(String myterm : termlist){
+                 strArr=new String[3]; 
+                 strArr[0] = kitabNo;
+                 strArr[1] = String.valueOf(docno);
+                 strArr[2]= myterm;
+                 doctermlist.add(strArr);
+                 counter++;
+                 System.out.println(counter + ". kitabID: " + kitabNo + " docID: " + docno + " term: " + myterm);
+              }
+        }
+        //copy ArrayList to String[][]
+        int listSize = doctermlist.size();        
+        dbterms = new String[listSize][3];
+        for (int x=0; x<listSize; x++)
+           dbterms[x] = doctermlist.get(x); 
+        
+        this.docTableModel = new DocPageTableModel();                
+        String[] docColumnNames = {"kitabID","docID","terms"};        
+        this.docTableModel.setColumnName(docColumnNames); 
+        this.docTableModel.populateList(dbterms);
         //export to excel workbook
-        ExportToExcel.expToCSV(this.halKitabTableModel, "D://arabicdocs/data2.xls");
+        ExportToExcel.expToCSV(this.docTableModel, "D://arabicdocs/docterms.xls");
         
     }
     
