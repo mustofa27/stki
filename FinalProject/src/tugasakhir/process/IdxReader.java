@@ -98,8 +98,8 @@ public class IdxReader  {
                         jarak/=posQuery.length;
                         int dfTerm = ir.docFreq(termObjUnik.get(j));
                         int dfQuery = ir.docFreq(termObjUnik.get(termUnik.indexOf(kueri[i])));
-                        double idfQuery = Math.log10(n_t/dfQuery);
-                        double idfTerm = Math.log10(n_t/dfTerm);
+                        double idfQuery = Math.log10(jumlah_dokumen/dfQuery);
+                        double idfTerm = Math.log10(jumlah_dokumen/dfTerm);
                         double itf = Math.log10(n_t/termUnikD.size());
                         double tfidfQuery = idfQuery*termFreq[idxQuery];
                         double tfidfTerm = idfTerm*termFreq[idxTerm];
