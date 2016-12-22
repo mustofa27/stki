@@ -19,6 +19,7 @@ import org.jdesktop.application.TaskMonitor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.Normalizer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -29,6 +30,10 @@ import javax.swing.JFrame;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
+import org.apache.lucene.analysis.ar.ArabicAnalyzer;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.util.Version;
 import tugasakhir.process.Bobot;
 import tugasakhir.process.IdxReader;
 import tugasakhir.process.Indexing;
@@ -570,44 +575,70 @@ public class View extends FrameView {
         setStatusBar(statusPanel);
     }// </editor-fold>//GEN-END:initComponents
     IdxReader indexReader ;
+    String queryNew = "";
+    
     private void cariButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cariButton1ActionPerformed
        
-        List<Bobot> bobotList;
+        List<Bobot> bobotList = null;
         String index = "FileIndex";
         Searcher searcher = null;
+        double sim;
         try {
             searcher = new Searcher(index);
+            indexReader = new IdxReader(index);
         } catch (IOException ex) {
             System.out.println("Tidak bisa membaca" + index);
         }
         
         String[][] hasil = null;
-        
+        int nTOP = 8;
+        //List<Bobot> topTerm = null;
+        String[] kueri=null;
         try {
-            hasil = searcher.search(this.cariTextField1.getText());
-            //
-            //!!!
+            //hasil = searcher.search(this.cariTextField1.getText());
+            Query query = new QueryParser(Version.LUCENE_34, "nass", 
+                new ArabicAnalyzer(Version.LUCENE_34)).parse(this.cariTextField1.getText());
+            String tmp = query.toString("nass");
+            kueri = tmp.split(" ");
             indexReader = new IdxReader(index);
-            String searchText = this.cariTextField1.getText().replaceAll("\"", "");
-            bobotList = indexReader.getThesaurus(this.cariTextField1.getText());
-            //indexReader.getTermPos(searchText);
-            //indexReader.getTerms();
+            //String searchText = this.cariTextField1.getText().replaceAll("\"", "");
+            bobotList = indexReader.getThesaurus(kueri);
+            //indexReader.constructThesaurus(kueri);
+           
         } catch (IOException | ParseException ex) {
         }
+        Bobot topObj= null;
+        int newLen = kueri.length + nTOP;        
+        StringBuilder bf = new StringBuilder();
+        String[] strTemp = new String[newLen];
+                
+        for(String qstr : kueri)
+           bf.append(qstr).append(" ");
+        
+        for(int i = 0; i<nTOP; i++){
+           topObj = bobotList.get(i);                     
+           bf.append(topObj.getKata()).append(" ");
+           System.out.println(topObj.getKata() + " similarity: " + topObj.getSimilarity());
+        }
+        String kueribaru = new String(bf);
+            //-------------------------------------------------------------------
+        try {    
+            hasil = searcher.search(this.cariTextField1.getText());
+            //sim = indexReader.getDocVector(searcher.topDocs);
+        } catch (ParseException | IOException ex) {            
+        }
         this.hasilCariTableModel.populateList(hasil);
-        
-        
+        //this.queryNew = kueribaru;
     }//GEN-LAST:event_cariButton1ActionPerformed
 
     private void hasilTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_hasilTable1MouseClicked
         String nass = this.hasilTable1.getValueAt(this.hasilTable1.getSelectedRow(), 3).toString();
         
-        
-        Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter( Color.GREEN );
+        Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter( Color.green);
 
         String searchWordUN = this.cariTextField1.getText().replaceAll("\"", "");
-        
-        
+        //String searchWordUN = this.queryNew;
+                
         StringBuilder stringBuilder = new StringBuilder();
 
         for (int i = 0; i < nass.length(); i++){

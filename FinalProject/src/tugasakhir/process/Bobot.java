@@ -35,10 +35,10 @@ public class Bobot implements Comparable<Bobot> {
 
     @Override
     public int compareTo(Bobot o) {
-        if (this.getSimilarity()<o.getSimilarity()){
+        if (this.getSimilarity()<o.getSimilarity())
             return 1;
-        }else{
+        else
             return -1;
-        }
+        
     }
 }

@@ -37,7 +37,7 @@ public class Searcher {
     IndexReader indexReader;
     TopDocs top = null;
     Query q = null;
-    
+    public ScoreDoc[] topDocs;
     public Searcher(String indexPath) throws IOException {
         Directory index = FSDirectory.open(new File(indexPath));
         this.indexReader = IndexReader.open(index);
@@ -58,7 +58,7 @@ public class Searcher {
         
         IndexSearcher indexSearcher = new IndexSearcher(this.indexReader);
         
-        int hits = 100;
+        int hits = 20;
         TopScoreDocCollector collector = TopScoreDocCollector.create(hits, true);
         
         //!!!
@@ -66,11 +66,10 @@ public class Searcher {
         indexSearcher.search(query, collector);
 //        this.top = collector.topDocs();
 
-        ScoreDoc[] topDocs = collector.topDocs().scoreDocs;
+        topDocs = collector.topDocs().scoreDocs;
         indexSearcher.setSimilarity(new CustomSimilarity());
         
         String[][] hasil = new String[topDocs.length][5];
-        
         for (int i = 0; i < topDocs.length; i++) {
             int docId = topDocs[i].doc;
             Document document = this.indexReader.document(docId);
