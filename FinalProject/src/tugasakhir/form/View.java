@@ -591,6 +591,7 @@ public class View extends FrameView {
         }
         
         String[][] hasil = null;
+        /*
         int nTOP = 8;
         //List<Bobot> topTerm = null;
         String[] kueri=null;
@@ -620,11 +621,11 @@ public class View extends FrameView {
            bf.append(topObj.getKata()).append(" ");
            System.out.println(topObj.getKata() + " similarity: " + topObj.getSimilarity());
         }
-        String kueribaru = new String(bf);
+        String kueribaru = new String(bf);*/
             //-------------------------------------------------------------------
         try {    
             hasil = searcher.search(this.cariTextField1.getText());
-            //sim = indexReader.getDocVector(searcher.topDocs);
+            sim = indexReader.getDocVector(searcher.topDocs);
         } catch (ParseException | IOException ex) {            
         }
         this.hasilCariTableModel.populateList(hasil);
